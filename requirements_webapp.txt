@@ -1,0 +1,11 @@
+# Requirements for 对-Construction Analyzer Web App
+
+# Core
+streamlit>=1.28.0
+pandas>=2.0.0
+
+# Optional (for production with V70 classifier)
+# numpy>=1.24.0
+# torch>=2.0.0
+# transformers>=4.30.0
+# scikit-learn>=1.3.0
