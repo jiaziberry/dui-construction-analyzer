@@ -93,7 +93,7 @@ CONSTRUCTION_INFO = {
         'color': '#95E1D3',
         'examples': [
             '对未来感到担心 (feel worried about future)',
-            '对他有好感 (have good feelings toward him)',
+            '对他很了解 (be very familiar with him)',
             '对结果满意 (be satisfied with result)'
         ]
     },
@@ -108,7 +108,7 @@ CONSTRUCTION_INFO = {
         'examples': [
             '对这个问题提出看法 (raise views ABOUT this issue)',
             '对政策进行分析 (analyze ABOUT policy)',
-            '对历史了解 (understand ABOUT history)'
+            '对现象进行研究 (research ABOUT phenomenon)'
         ]
     },
     'DISP': {
@@ -122,7 +122,7 @@ CONSTRUCTION_INFO = {
         'examples': [
             '对他很友好 (be friendly TOWARD him)',
             '对学生很严格 (be strict TOWARD students)',
-            '对工作认真 (be serious TOWARD work)'
+            '对我很坏 (be mean/bad TOWARD me)'
         ]
     },
     'EVAL': {
@@ -260,45 +260,84 @@ def parse_sentence(sentence: str) -> Dict:
 
 def simple_classify(y_phrase: str, predicate: str, complement: str) -> Tuple[str, float]:
     """
-    Simplified classification based on predicate patterns
-    For demo purposes - replace with actual classifier for production
+    Improved classification with better heuristics
+    Based on V70 classifier patterns
     """
     
+    # Combine predicate + complement for pattern matching
+    full_pred = predicate + complement
+    
+    # PRIORITY 1: 很/非常 + adjective → DISP (manner)
+    # FIX: Catches 很坏, 很好, 很友好, etc.
+    if any(marker in full_pred for marker in ['很', '非常', '特别', '十分', '相当']):
+        # Check if it's a manner adjective (describes behavior/attitude)
+        manner_indicators = {
+            '好', '坏', '差', '友好', '热情', '认真', '严格', '负责', '礼貌', 
+            '客气', '冷淡', '温柔', '粗暴', '体贴', '冷漠', '亲切', '和蔼',
+            '严厉', '苛刻', '真诚', '诚恳', '公平', '公正', '忠诚', '专情',
+            '恩爱', '孝顺', '顺从', '敷衍', '无视', '关心', '在意', '上心'
+        }
+        if any(adj in full_pred for adj in manner_indicators):
+            return 'DISP', 0.94
+    
     # Speech verbs → DA
-    speech_verbs = {'说', '讲', '告诉', '问', '答', '解释', '介绍', '通知', '宣布'}
+    speech_verbs = {'说', '讲', '告诉', '问', '答', '回答', '解释', '介绍', '通知', '宣布', 
+                    '表示', '声明', '承认', '否认', '建议', '劝告', '警告', '提醒'}
     if predicate in speech_verbs:
         return 'DA', 0.95
     
     # Procedural verbs → SI
-    procedural_verbs = {'进行', '管理', '处理', '实施', '采取', '提供', '给予', '加强'}
+    procedural_verbs = {'进行', '管理', '处理', '实施', '采取', '提供', '给予', '加强',
+                       '开展', '执行', '推行', '施加', '控制', '监督', '检查'}
     if predicate in procedural_verbs:
         return 'SI', 0.94
     
-    # Feeling verbs → MS
-    feeling_verbs = {'感到', '觉得', '认为', '担心', '满意', '喜欢', '讨厌'}
+    # Mental state verbs → MS (FIX: 了解 moved here!)
+    # These indicate internal psychological states
+    feeling_verbs = {'感到', '觉得', '认为', '担心', '满意', '喜欢', '讨厌', '害怕',
+                    '了解', '熟悉', '理解', '关心', '在意', '重视', '信任', '怀疑',
+                    '爱', '恨', '想念', '思念', '敬佩', '羡慕', '嫉妒', '感激'}
     if predicate in feeling_verbs:
         return 'MS', 0.93
     
-    # Research verbs → ABT
-    research_verbs = {'研究', '分析', '讨论', '了解', '调查', '评价', '认识'}
+    # Research/discourse verbs → ABT
+    research_verbs = {'研究', '分析', '讨论', '调查', '评价', '考察', '探讨',
+                     '观察', '检验', '测试', '审查', '鉴定'}
     if predicate in research_verbs:
         return 'ABT', 0.92
     
-    # Manner adjectives → DISP
-    manner_adj = {'友好', '热情', '认真', '严格', '负责', '礼貌', '客气', '冷淡'}
+    # Pure manner adjectives → DISP (without 很)
+    manner_adj = {'友好', '热情', '认真', '严格', '负责', '礼貌', '客气', '冷淡',
+                 '温柔', '粗暴', '体贴', '冷漠', '真诚', '诚恳', '公平', '忠诚',
+                 '好', '坏', '差', '善良', '凶恶', '残忍', '仁慈'}
     if predicate in manner_adj:
         return 'DISP', 0.94
     
     # Evaluative adjectives → EVAL
-    eval_adj = {'重要', '有利', '有益', '有害', '有用', '必要', '有效', '危险'}
+    eval_adj = {'重要', '有利', '有益', '有害', '有用', '必要', '有效', '危险',
+               '关键', '致命', '宝贵', '珍贵', '难得', '难能可贵'}
     if predicate in eval_adj:
         return 'EVAL', 0.91
     
-    # Check complement for clues
-    if '有' in predicate and any(word in complement for word in ['益', '害', '利', '用']):
-        return 'EVAL', 0.88
+    # 是 + adjective patterns
+    if predicate == '是':
+        # DISP: 是 + manner adjective
+        if any(adj in complement for adj in ['友好的', '真诚的', '认真的', '严格的', '负责的']):
+            return 'DISP', 0.93
+        # EVAL: 是 + evaluative noun
+        if any(noun in complement for noun in ['威胁', '帮助', '负担', '好处', '坏处']):
+            return 'EVAL', 0.88
     
-    # Default
+    # 有 patterns
+    if predicate == '有':
+        # EVAL: 有益/有害/有用
+        if any(word in complement for word in ['益', '害', '利', '用', '好处', '坏处', '帮助']):
+            return 'EVAL', 0.92
+        # MS: 有感情/有好感/有兴趣
+        if any(word in complement for word in ['感情', '好感', '兴趣', '印象', '了解', '认识']):
+            return 'MS', 0.90
+    
+    # Default to ABT (safest fallback)
     return 'ABT', 0.70
 
 # ============================================================================
@@ -358,9 +397,9 @@ def main():
             "Select an example...": "",
             "DA: 对他说 (say to him)": "我对他说了实话",
             "SI: 对问题进行研究 (research on problem)": "专家对这个问题进行研究",
-            "MS: 对未来感到担心 (worry about future)": "他对未来感到担心",
+            "MS: 对他很了解 (very familiar with him)": "我对他很了解",
             "ABT: 对政策提出看法 (views about policy)": "学者对政策提出看法",
-            "DISP: 对学生很严格 (strict toward students)": "老师对学生很严格",
+            "DISP: 对我很坏 (mean toward me)": "他对我很坏",
             "EVAL: 对健康有益 (beneficial for health)": "运动对健康有益"
         }
         
