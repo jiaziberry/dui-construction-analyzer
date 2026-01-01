@@ -4,5 +4,6 @@
 streamlit>=1.28.0
 pandas>=2.0.0
 
-# No additional packages needed for rule-based classifier!
-# BERT/ML packages NOT required (using rule-based V70 only)
+# V70 Classifier dependencies
+tqdm>=4.65.0
+numpy>=1.24.0
