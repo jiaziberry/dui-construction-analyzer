@@ -1,9 +1,6 @@
 # Requirements for Production Web App with V70 Classifier
+# Minimal version - NO heavy dependencies!
 
-# Core
+# Core (that's all we need!)
 streamlit>=1.28.0
 pandas>=2.0.0
-
-# V70 Classifier dependencies
-tqdm>=4.65.0
-numpy>=1.24.0
