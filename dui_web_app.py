@@ -60,8 +60,8 @@ st.markdown("""
 def load_v70_classifier():
     """Load the V70 classifier (cached for performance)"""
     try:
-        # Import from the classifier file
-        from dui_classifier_v70_lite import RuleBasedClassifier
+        # Import from the MINIMAL classifier file (no dependencies!)
+        from dui_classifier_v70_minimal import RuleBasedClassifier
         return RuleBasedClassifier()
     except Exception as e:
         st.error(f"⚠️ V70 Classifier error: {str(e)}")
