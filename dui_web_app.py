@@ -63,8 +63,9 @@ def load_v70_classifier():
         # Import from the classifier file
         from dui_classifier_v70_lite import RuleBasedClassifier
         return RuleBasedClassifier()
-    except ImportError:
-        st.error("⚠️ V70 Classifier not found. Using fallback classifier.")
+    except Exception as e:
+        st.error(f"⚠️ V70 Classifier error: {str(e)}")
+        st.error(f"Error type: {type(e).__name__}")
         return None
 
 # Try to load classifier
