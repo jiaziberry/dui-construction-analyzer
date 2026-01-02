@@ -44,6 +44,52 @@ class PredicateExtractor:
                 self.use_ltp = False
                 self.ltp = None
     
+    def _preprocess_sentence(self, sentence: str) -> str:
+        """
+        Preprocess sentence to handle whitespace, weird symbols, and corpus markers.
+        
+        Handles:
+        - All whitespace (spaces, tabs, newlines, etc.)
+        - Control characters
+        - BCC corpus markers (NR, NS, NT, NZ)
+        - Special punctuation and symbols
+        - Unicode normalization
+        """
+        if not sentence:
+            return ''
+        
+        # 1. Strip all whitespace (regular and Unicode spaces)
+        sentence = re.sub(r'\s+', '', sentence)
+        sentence = re.sub(r'[\u00a0\u2000-\u200b\u2028\u2029\u202f\u205f\u3000]+', '', sentence)
+        
+        # 2. Remove control characters
+        sentence = re.sub(r'[\x00-\x1f\x7f-\x9f]', '', sentence)
+        
+        # 3. Handle BCC corpus markers - replace with placeholder names
+        # NR = person name, NS = place name, NT = organization, NZ = other proper noun
+        sentence = re.sub(r'NRNR', '某某', sentence)  # Double NR
+        sentence = re.sub(r'NR', '某人', sentence)     # Single person
+        sentence = re.sub(r'NS', '某地', sentence)     # Place
+        sentence = re.sub(r'NT', '某机构', sentence)   # Organization  
+        sentence = re.sub(r'NZ', '某某', sentence)     # Other proper noun
+        
+        # 4. Remove common noise symbols (but keep Chinese punctuation)
+        # Keep: Chinese punctuation (。，！？、；：""''（）【】)
+        # Remove: weird brackets, invisible chars, etc.
+        sentence = re.sub(r'[「」『』〖〗〔〕]', '', sentence)  # Japanese brackets
+        sentence = re.sub(r'[\u200c\u200d\ufeff]', '', sentence)  # Zero-width chars
+        sentence = re.sub(r'[●○◎◇◆□■△▲▽▼★☆]', '', sentence)  # Symbols
+        
+        # 5. Normalize some common variants
+        sentence = sentence.replace('　', '')  # Full-width space
+        sentence = sentence.replace('︰', '：')  # Variant colon
+        sentence = sentence.replace('︔', '；')  # Variant semicolon
+        
+        # 6. Remove leading/trailing punctuation that might interfere
+        sentence = sentence.strip('。，！？；：、')
+        
+        return sentence
+    
     def extract(self, sentence: str) -> Dict[str, str]:
         """
         Extract components from a 对-construction sentence.
@@ -59,8 +105,8 @@ class PredicateExtractor:
             - pred_comp: Predicate + complement
             - y_anim: Animacy of Y ('anim' or 'inan')
         """
-        # Strip whitespace from sentence
-        sentence = re.sub(r'\s+', '', sentence)
+        # Comprehensive preprocessing
+        sentence = self._preprocess_sentence(sentence)
         
         if '对' not in sentence:
             return {
@@ -201,6 +247,7 @@ class PredicateExtractor:
         """
         Extract using rule-based heuristics.
         Improved to handle complex sentences.
+        Note: Sentence is already preprocessed by _preprocess_sentence()
         """
         result = {
             'x_phrase': '',
@@ -210,9 +257,6 @@ class PredicateExtractor:
             'y_anim': 'inan',
             'method': 'rules'
         }
-        
-        # Strip whitespace
-        sentence = re.sub(r'\s+', '', sentence)
         
         # Split by 对
         parts = sentence.split('对', 1)
