@@ -1,4 +1,4 @@
-# 对-Construction Analyzer (对构式分析器)
+# 对-Construction Analyser (对构式分析器)
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://your-app-url.streamlit.app)
 
@@ -8,7 +8,7 @@ A web application for analyzing Chinese 对-constructions based on Usage-Based C
 
 ## Features
 
-- **🔍 Sentence Analyzer**: Enter any Chinese sentence with 对 to:
+- **🔍 Sentence Analyser**: Enter any Chinese sentence with 对 to:
   - Identify the construction type (DA, SI, MS, ABT, DISP, EVAL)
   - View semantic roles (Fillmore and Dowty proto-roles)
   - Understand the classification reasoning
@@ -44,8 +44,8 @@ A web application for analyzing Chinese 对-constructions based on Usage-Based C
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/dui-construction-analyzer.git
-cd dui-construction-analyzer
+git clone https://github.com/yourusername/dui-construction-analyser.git
+cd dui-construction-analyser
 
 # Install dependencies
 pip install -r requirements.txt
@@ -103,6 +103,16 @@ This tool is based on the v70 classification framework developed for doctoral di
 - DISP: Observable behavioral manner
 - MS: Internal psychological state
 
+### Example Analyses
+
+| Sentence | Y | Predicate | Type |
+|----------|---|-----------|------|
+| 我对这一点体会很深刻 | 这一点 | 体会 | MS |
+| 这对健康有害 | 健康 | 有害 | EVAL |
+| 她对我不友好 | 我 | 不友好 | DISP |
+| 政府对企业进行检查 | 企业 | 进行 | SI |
+| 他对我说了一番话 | 我 | 说 | DA |
+
 ## Data Source
 
 The frequency data comes from the **BCC Corpus** (北京语言大学现代汉语语料库), containing:
@@ -115,13 +125,38 @@ The frequency data comes from the **BCC Corpus** (北京语言大学现代汉语
 If you use this tool in your research, please cite:
 
 ```bibtex
-@software{dui_construction_analyzer,
-  title = {对-Construction Analyzer},
+@software{dui_construction_analyser,
+  title = {对-Construction Analyser},
   author = {Jiaqi},
   year = {2026},
-  url = {https://github.com/yourusername/dui-construction-analyzer}
+  url = {https://github.com/yourusername/dui-construction-analyser}
 }
 ```
+
+## Changelog
+
+### v1.1.0 (January 2026)
+
+**Predicate Extraction Fixes:**
+- Fixed Pattern J ordering: EVAL predicates (有害/有利/有益) now correctly extracted before generic 有 pattern
+- Added whitespace stripping for sentences with irregular spacing
+- New Pattern A: Handles experiential verbs (体会/感受/印象) + degree adverbs
+- New Pattern B: Correctly parses relative clauses ending in 的事情/的问题/的情况
+
+**Classifier Improvements:**
+- Expanded MS_VERBS with ~20 emotion verbs: 愤怒, 生气, 高兴, 惊讶, 好奇, etc.
+- Added experiential cognition verbs: 体会, 感受, 领会, 领悟, 体验
+
+**Test Coverage:**
+- All 13 core test cases passing
+- Improved handling of edge cases like "这对健康有害" → EVAL
+
+### v1.0.0 (December 2025)
+
+- Initial release with v70 classifier framework
+- Six construction types: DA, SI, MS, ABT, DISP, EVAL
+- BCC corpus frequency data (394,355 instances)
+- Streamlit web interface
 
 ## License
 
